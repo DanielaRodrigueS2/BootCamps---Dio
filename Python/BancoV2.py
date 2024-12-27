@@ -1,5 +1,5 @@
 users = [] # nome, data de nascimento, cpf e endereço + senha(eu mesma inclui)
-contas = [{}] #agencia, numero da conta e usuário, num de conta é sequencial (inicia em 1) e agencia é fixa em 0001
+contas = [] #agencia, numero da conta e usuário, num de conta é sequencial (inicia em 1) e agencia é fixa em 0001
 user_logado = None
 LIMITE = 500.0
 
@@ -23,51 +23,43 @@ def main():
 
 
 def saque(user, conta):
-    saldo = contas[conta]['saldo']
-    numero_saques = 1
-    while(numero_saques > 0):
-        if(contas[conta]['limite_saques'] > 0):
-            valor = input('\nDigite o valor que deseja sacar: ')
-
-            if(isFloat(valor)):
-                valor = float(valor)
-                if(valor <= saldo and valor < LIMITE and valor > 0):
-                    transacao = f'SAQUE: R${saldo:.2f} - R${valor:.2f} = R${(saldo-valor):.2f} CONTA: {contas[conta]['num_conta']}'
-                    users[user]['extrato'].append(transacao)
-                    saldo -= valor
-                    contas[conta]['saldo'] = saldo
-                    print('\nSaque realizado com sucesso')
-                    contas[conta]['numero_saques'] -= 1
-                    
-                else:
-                    print('\nValor inválido')
-                        
-            else:
-                print('\nValor inválido!')
-
+    conta_data = contas[conta]
+    if conta_data['limite_saques'] <= 0:
+        print('\nLimite de saques atingido.')
+        return
+    
+    saldo = conta_data['saldo']
+    valor = input('\nDigite o valor que deseja sacar: ')
+    
+    if isFloat(valor):
+        valor = float(valor)
+        if 0 < valor <= saldo and valor <= LIMITE:
+            conta_data['saldo'] -= valor
+            conta_data['limite_saques'] -= 1
+            transacao = f'SAQUE: R${valor:.2f} - Saldo Atual: R${conta_data["saldo"]:.2f}'
+            users[user]['extrato'].append(transacao)
+            print('\nSaque realizado com sucesso.')
         else:
-            print('\nLimite de saques atingido')
+            print('\nValor inválido ou saldo insuficiente.')
+    else:
+        print('\nValor inválido.')
 
-        numero_saques -= 1
-
-    return saldo
 
 def deposito(conta, user):
-    saldo = contas[conta]['saldo']
+    conta_data = contas[conta]
     valor = input('\nDigite o valor que deseja depositar: ')
-    if(isFloat(valor)):
+    
+    if isFloat(valor):
         valor = float(valor)
-        if(valor > 0):
-            transacao = f'DEPOSITO: R${saldo:.2f} + R${valor:.2f} = R${(saldo+valor):.2f} CONTA: {contas[conta]['num_conta']}'
+        if valor > 0:
+            conta_data['saldo'] += valor
+            transacao = f'DEPÓSITO: R${valor:.2f} - Saldo Atual: R${conta_data["saldo"]:.2f}'
             users[user]['extrato'].append(transacao)
-            saldo += valor
-            contas[conta]['saldo'] = saldo
-            print('\nDeposito realizado com sucesso')
-
+            print('\nDepósito realizado com sucesso.')
         else:
-            print('\nValor inválido!')
+            print('\nValor inválido.')
     else:
-        print('\nValor inválido!')
+        print('\nValor inválido.')
 
 def extrato(user):
     if users[user]['extrato'] == []:
@@ -79,19 +71,21 @@ def extrato(user):
 
 def buscaCpf(cpf):
     if users == []:
-        return True
+        return None
     for i ,item in enumerate(users):
         if item['cpf'] == cpf:
-            print('\nCPF já cadastrado!')
             return i
     return None
 
 def buscaConta(user, num_conta):
+    if contas == []:
+        print('\nNenhuma conta cadastrada')
+        return
     num_conta = int(num_conta)
-    for c in contas:
-        if c['user'] == users[user]['cpf']:
+    for i, c in enumerate(contas):
+        if c['user'] == user:
             if(num_conta == c['num_conta']):
-                return num_conta
+                return i
     print('\nConta não encontrada')
     return None
 
@@ -104,7 +98,9 @@ def criarUser():
     if len(cpf) != 11:
         print('\nCPF inválido!')
         return 
-    if not buscaCpf(cpf): return
+    if buscaCpf(cpf) != None: 
+        print('\nCPF já cadastrado!') 
+        return
     
     user = {'nome' : nome, 'data' : data, 'cpf' : cpf, 'senha' : senha, 'extrato' : []}
     users.append(user)
@@ -120,6 +116,7 @@ def criarConta():
     nova_conta = {'agencia' : agencia, 'num_conta': num_conta, 'user' : user, 'saldo' : saldo, 
     'limite': 500.0, 'limite_saques' : 3}
     contas.append(nova_conta)
+    print(contas)
     return
 
 def login():
@@ -169,7 +166,8 @@ def textoMenu(tipo):
     2 - Depositar
     3 - Visualizar extrato 
     4 - Abrir nova conta
-    5 - Sair 
+    5 - Suas informações
+    6 - Sair 
     """)
         
     op = input('\nDigite a opção: ')
@@ -199,10 +197,12 @@ def menu_login(user, login):
                 criarConta()
 
             case '5':
-                login = False
+                print(users[user])
+
+            case '6':
+                login = False    
 
             case _:
                 print('\nOpção inválida')
-
 
 main()
