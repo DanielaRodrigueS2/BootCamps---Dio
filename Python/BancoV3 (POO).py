@@ -16,7 +16,7 @@ class Conta:
         return conta
 
     def sacar(self,valor):
-        pass
+        self._saldo -= valor
 
     def depositar(self,valor):
         self._saldo += valor
@@ -24,6 +24,10 @@ class Conta:
     @property
     def saldo(self):
         return self._saldo
+
+    @property
+    def historico(self):
+        return self._historico
     
 class ContaCorrente(Conta):
     def __init__(self, cliente, historico, limite, limite_saques):
@@ -37,8 +41,13 @@ class Historico:
         self._transacoes = []
 
     def adicionar_transacao(self,transacao):
+        texto = f'Transacao: {transacao.__class__.__name__} valor: {transacao.valor}'
         self._transacoes.append(transacao)
         pass
+
+    @property
+    def transacoes(self):
+        return self._transacoes
 
 class Transacao(ABC):
 
@@ -52,25 +61,38 @@ class Deposito(Transacao):
         self.valor = valor
 
     def registrar(self, conta):
-        valor = input('\nDigite o valor que deseja depositar: ')
-    
+        
         if isFloat(self.valor):
             valor = float(self.valor)
             if valor > 0:
                 conta.depositar(valor)
                 conta._historico.adicionar_transacao(self)
             else:
-                print('\nValor inválido.')
+                print('\nValor inválido (valor menor que 0)')
         else:
-            print('\nValor inválido.')
+            print('\nValor inválido (valor não é um número)')
     
 class Saque(Transacao):
 
     def __init__(self, valor):
         self.valor = valor
 
-    def registrar(conta):
-        return super().registrar()   
+    def registrar(self, conta):
+
+        if isFloat(self.valor):
+            valor = float(self.valor)
+            if valor > 0:
+                if conta.saldo < valor:
+                    print('\nValor indisponível')
+
+                else:
+                    conta.sacar(valor)
+                    conta._historico.adicionar_transacao(self)
+            else:
+                print('\nValor inválido (valor menor que 0)')
+        else:
+
+            print('\nValor inválido (valor não é um número)')
     
 class PessoaFisica:
 
@@ -88,10 +110,10 @@ class Cliente(PessoaFisica):
         self._senha = senha
 
     def realizar_transacao(conta, transacao):
-        pass
+        transacao.registrar(conta)
 
-    def adicionar_conta(conta):
-        pass
+    def adicionar_conta(self,conta):
+        self._contas.append(conta)
 
     @property
     def cpf(self):
@@ -112,8 +134,9 @@ def main():
         op = textoMenu(1)
         match(op):
             case '1':
-                login()
-                print(f'\nTESTE user logado: {user_logado}')
+                if login():
+                    print(f'\nTESTE user logado: {user_logado}')
+                    menu_login(True, user_logado)
             case '2':
                 criarUser()
             case '3':
@@ -189,6 +212,10 @@ def criarUser():
     users.append(user)
     print(users)
     return
+
+def criarConta(cliente):
+    conta = Conta(cliente)
+    cliente.adicionar_conta(conta)
     
 def buscaCpf(cpf):
     if users == []:
@@ -200,21 +227,47 @@ def buscaCpf(cpf):
     
     return None
 
-def menu_login(user, login):
+def busca_conta(cliente, num):
+    contas = cliente.contas
+    if contas == []:
+        return None
+    for conta in contas:
+        if conta.numero == num:
+            return conta
+    return None
+
+def extrato(cliente):
+    contas = cliente.contas
+    if contas == []:
+        print('\nExtrato inexistente')
+        return 
+    else:
+        for conta in contas:
+            print(f'\nConta número: {conta.numero}')
+            print('\nTransacoes:\n')
+            print(conta.historico)
+
+
+def menu_login(login, user):
+    global user_logado
     while(login):
         op = textoMenu(2)
         match(op):
             case '1':
                 num_conta = input('\nDigite o número da conta: ')
-                num_conta = buscaConta(user, num_conta)
-                if(num_conta != None):
-                    saque(user, num_conta)
+                conta = busca_conta(user, num_conta)
+                if(conta != None):
+                    valor = input("\nDigite o valor a ser sacado:")
+                    saque = Saque(valor)
+                    user.realizar_transacao(conta, saque)
                 
             case '2':
                 num_conta = input('\nDigite o número da conta: ')
-                num_conta = buscaConta(user, num_conta)
-                if(num_conta != None):
-                    deposito(user, num_conta)
+                conta = busca_conta(user, num_conta)
+                if(conta != None):
+                    valor = input("\nDigite o valor a ser depositado:")
+                    deposito = Deposito(valor)
+                    user.realizar_transacao(conta, deposito)
                 
             case '3':
                 extrato(user)
@@ -223,11 +276,11 @@ def menu_login(user, login):
                 criarConta()
 
             case '5':
-                print(users[user])
+                pass
 
             case '6':
                 login = False    
-
+                user_logado = None
             case _:
                 print('\nOpção inválida')
 
