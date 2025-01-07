@@ -8,7 +8,7 @@ class Conta:
         self._cliente = cliente
         self._saldo = 0.0
         self._agencia = '0001'
-        self._numero = len(cliente.contas) + 1
+        self._numero = len(cliente._contas) + 1
         self._historico = Historico()
 
     def novaConta(self,cliente, numero):
@@ -109,7 +109,7 @@ class Cliente(PessoaFisica):
         self._contas = contas
         self._senha = senha
 
-    def realizar_transacao(conta, transacao):
+    def realizar_transacao(self,conta, transacao):
         transacao.registrar(conta)
 
     def adicionar_conta(self,conta):
@@ -188,7 +188,7 @@ def login():
     if(senha == user.senha):
         print('\nLogin realizado com sucesso!')
         user_logado = user
-        menu_login(user, True)
+        menu_login(True, user)
         return True
     else:
         print('\nSenha incorreta!')
@@ -255,6 +255,7 @@ def menu_login(login, user):
         match(op):
             case '1':
                 num_conta = input('\nDigite o número da conta: ')
+                num_conta = int(num_conta)
                 conta = busca_conta(user, num_conta)
                 if(conta != None):
                     valor = input("\nDigite o valor a ser sacado:")
@@ -263,6 +264,7 @@ def menu_login(login, user):
                 
             case '2':
                 num_conta = input('\nDigite o número da conta: ')
+                num_conta = int(num_conta)
                 conta = busca_conta(user, num_conta)
                 if(conta != None):
                     valor = input("\nDigite o valor a ser depositado:")
@@ -273,7 +275,7 @@ def menu_login(login, user):
                 extrato(user)
 
             case '4':
-                criarConta()
+                criarConta(user)
 
             case '5':
                 pass
