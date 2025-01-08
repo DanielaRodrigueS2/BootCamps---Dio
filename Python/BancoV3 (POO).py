@@ -42,7 +42,7 @@ class Historico:
 
     def adicionar_transacao(self,transacao):
         texto = f'Transacao: {transacao.__class__.__name__} valor: {transacao.valor}'
-        self._transacoes.append(transacao)
+        self._transacoes.append(texto)
         pass
 
     @property
@@ -67,6 +67,7 @@ class Deposito(Transacao):
             if valor > 0:
                 conta.depositar(valor)
                 conta._historico.adicionar_transacao(self)
+                print('\nDeposito realizado com sucesso')
             else:
                 print('\nValor inválido (valor menor que 0)')
         else:
@@ -88,6 +89,7 @@ class Saque(Transacao):
                 else:
                     conta.sacar(valor)
                     conta._historico.adicionar_transacao(self)
+                    print('\nSaque realizado com sucesso')
             else:
                 print('\nValor inválido (valor menor que 0)')
         else:
@@ -115,6 +117,9 @@ class Cliente(PessoaFisica):
     def adicionar_conta(self,conta):
         self._contas.append(conta)
 
+    def __str__(self):
+        return f'{self.__class__.__name__} : {[f'{chave} : {valor}' for chave, valor in self.__dict__.items()]}' 
+
     @property
     def cpf(self):
         return self._cpf
@@ -126,6 +131,7 @@ class Cliente(PessoaFisica):
     @property
     def contas(self):
         return self._contas
+
 
 def main():
     #implementação de operacoes
@@ -216,6 +222,7 @@ def criarUser():
 def criarConta(cliente):
     conta = Conta(cliente)
     cliente.adicionar_conta(conta)
+    print(f'\nConta num: {conta._numero} criada com sucesso')
     
 def buscaCpf(cpf):
     if users == []:
@@ -232,7 +239,7 @@ def busca_conta(cliente, num):
     if contas == []:
         return None
     for conta in contas:
-        if conta.numero == num:
+        if conta._numero == num:
             return conta
     return None
 
@@ -243,9 +250,9 @@ def extrato(cliente):
         return 
     else:
         for conta in contas:
-            print(f'\nConta número: {conta.numero}')
+            print(f'\nConta número: {conta._numero}')
             print('\nTransacoes:\n')
-            print(conta.historico)
+            print(conta.historico.transacoes)
 
 
 def menu_login(login, user):
@@ -261,6 +268,8 @@ def menu_login(login, user):
                     valor = input("\nDigite o valor a ser sacado:")
                     saque = Saque(valor)
                     user.realizar_transacao(conta, saque)
+                else:
+                    print('\nConta inexistente')
                 
             case '2':
                 num_conta = input('\nDigite o número da conta: ')
@@ -270,6 +279,8 @@ def menu_login(login, user):
                     valor = input("\nDigite o valor a ser depositado:")
                     deposito = Deposito(valor)
                     user.realizar_transacao(conta, deposito)
+                else:
+                    print('\nConta inexistente')
                 
             case '3':
                 extrato(user)
@@ -278,7 +289,7 @@ def menu_login(login, user):
                 criarConta(user)
 
             case '5':
-                pass
+                print(Cliente.__str__(user))
 
             case '6':
                 login = False    
@@ -294,4 +305,9 @@ def isFloat(numero):
     except:
         return False
 
+def banco():
+    user = Cliente('12312312312', 'Dani', '31032004','sapo cururu', [], '123')
+    users.append(user)
+
+banco()
 main()
