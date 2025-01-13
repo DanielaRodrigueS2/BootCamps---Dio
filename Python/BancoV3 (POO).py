@@ -1,4 +1,8 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
+from pathlib import Path
+
+PATH = Path(__file__).parent
 users = []
 user_logado = None
 
@@ -131,6 +135,17 @@ class Cliente(PessoaFisica):
     @property
     def contas(self):
         return self._contas
+    
+class Log():
+
+    def adicionar(self, data_hora, funcao, argumentos, retorno):
+        novo_log = f'Data e hora: {data_hora}, Função: {funcao}, argumentos: {argumentos}, retorno: {retorno} '
+        try:
+            with open(PATH / 'log.txt', 'a') as log:
+                log.write(novo_log)
+
+        except IOError as exc:
+            print(f'Erro ao aabrir arquivo {exc}')
 
 
 def main():
@@ -138,7 +153,7 @@ def main():
     sistema = True
     while(sistema):
         op = textoMenu(1)
-        match(op):
+        match(op):  
             case '1':
                 if login():
                     print(f'\nTESTE user logado: {user_logado}')
