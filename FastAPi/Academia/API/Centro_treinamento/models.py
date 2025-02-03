@@ -2,6 +2,7 @@ from sqlalchemy import Integer, String
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from Academia.API.Atleta.models import AtletaModel
 from Academia.API.contrib.models import BaseModel
 
 
